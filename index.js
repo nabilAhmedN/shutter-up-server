@@ -33,6 +33,13 @@ async function run() {
             res.send(server);
         });
 
+        app.get("/allservices", async(req, res) => {
+            const query = {}
+            const cursor = serviceCollection.find(query)
+            const server = await cursor.toArray();
+            res.send(server);
+        });
+
         
     } 
     finally {
