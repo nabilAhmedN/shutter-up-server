@@ -26,34 +26,39 @@ async function run() {
     try {
         const serviceCollection = client.db("shutterUp").collection("services");
 
-        app.get("/services", async(req, res) => {
-            const query = {}
-            const cursor = serviceCollection.find(query)
-            const server = await cursor.limit(3).toArray();
-            res.send(server);
+        const reviewsCollection = client.db("shutterUp").collection("reviews");
+
+        app.get("/services", async (req, res) => {
+            const query = {};
+            const cursor = serviceCollection.find(query);
+            const service = await cursor.limit(3).toArray();
+            res.send(service);
         });
 
-        app.get("/allservices", async(req, res) => {
-            const query = {}
-            const cursor = serviceCollection.find(query)
-            const server = await cursor.toArray();
-            res.send(server);
+        app.get("/allservices", async (req, res) => {
+            const query = {};
+            const cursor = serviceCollection.find(query);
+            const service = await cursor.toArray();
+            res.send(service);
         });
 
-        app.get("/services/:id", async(req, res) => {
+        app.get("/services/:id", async (req, res) => {
             const id = req.params.id;
-            const query = {_id: ObjectId(id)}
-            const service = await serviceCollection.findOne(query)
-            res.send(service)
-        })
-    } 
-    finally {
+            const query = { _id: ObjectId(id) };
+            const service = await serviceCollection.findOne(query);
+            res.send(service);
+        });
 
+        app.post('/reviews', async(req, res) => {
+            const order = req.body;
+            const result = await reviewsCollection.insertOne(order)
+            res.send(result)
+        })
+
+    } finally {
     }
 }
 run().catch((err) => console.error(err));
-
-
 
 app.get("/", (req, res) => {
     res.send("shutter up server is running");
