@@ -49,6 +49,21 @@ async function run() {
             res.send(service);
         });
 
+        app.get('/reviews', async(req, res) => {
+            let query = {}
+            if(req.query.service){
+                query={
+                    service: req.query.service
+                }
+            }
+            const cursor = reviewsCollection.find(query);
+            const result = await cursor.toArray();
+
+            let sortdata = result.sort((x,y) => y.date.localeCompare(x.data))
+            
+            res.send(sortdata);
+        })
+
         app.post('/reviews', async(req, res) => {
             const order = req.body;
             const result = await reviewsCollection.insertOne(order)
