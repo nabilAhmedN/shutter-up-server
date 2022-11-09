@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 5000;
@@ -9,12 +10,7 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// user: shutterUpDBUser
-// password: FWE8iFMd4D1lKtWO
-
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.0byrl94.mongodb.net/?retryWrites=true&w=majority`;
-
-console.log(uri);
 
 const client = new MongoClient(uri, {
     useNewUrlParser: true,
@@ -27,6 +23,14 @@ async function run() {
         const serviceCollection = client.db("shutterUp").collection("services");
 
         const reviewsCollection = client.db("shutterUp").collection("reviews");
+
+        app.post("/jwt", (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+                expiresIn: "2 days",
+            });
+            res.send({ token });
+        });
 
         app.get("/services", async (req, res) => {
             const query = {};
@@ -49,26 +53,41 @@ async function run() {
             res.send(service);
         });
 
-        app.get('/reviews', async(req, res) => {
-            let query = {}
-            if(req.query.service){
-                query={
-                    service: req.query.service
-                }
+        app.get("/reviews", async (req, res) => {
+            let query = {};
+            if (req.query.service) {
+                query = {
+                    service: req.query.service,
+                };
+            } else if (req.query.email) {
+                query = {
+                    email: req.query.email,
+                };
             }
             const cursor = reviewsCollection.find(query);
             const result = await cursor.toArray();
 
-            let sortdata = result.sort((x,y) => y.date.localeCompare(x.data))
-            
-            res.send(sortdata);
-        })
+            let sortdata = result.sort((x, y) => y.date.localeCompare(x.data));
 
-        app.post('/reviews', async(req, res) => {
+            res.send(sortdata);
+        });
+
+        app.post("/reviews", async (req, res) => {
             const order = req.body;
-            const result = await reviewsCollection.insertOne(order)
-            res.send(result)
-        })
+            const result = await reviewsCollection.insertOne(order);
+            res.send(result);
+        });
+
+        // delete
+        app.delete("/reviews/:id", async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await reviewsCollection.deleteOne(query);
+            res.send(result);
+        });
+
+        // update
+        
 
     } finally {
     }
