@@ -32,18 +32,22 @@ async function run() {
             res.send({ token });
         });
 
+        // read all
         app.get("/services", async (req, res) => {
             const query = {};
             const cursor = serviceCollection.find(query);
-            const service = await cursor.limit(3).toArray();
-            res.send(service);
+            // const service = await cursor.limit(3).toArray();
+            const service = await cursor.toArray();
+            let newData = service.sort((a,b) => b.date.localeCompare(a.date))
+            res.send(newData);
         });
 
         app.get("/allservices", async (req, res) => {
             const query = {};
             const cursor = serviceCollection.find(query);
             const service = await cursor.toArray();
-            res.send(service);
+            let newData = service.sort((a, b) => b.date.localeCompare(a.date));
+            res.send(newData);
         });
 
         app.get("/services/:id", async (req, res) => {
@@ -51,6 +55,13 @@ async function run() {
             const query = { _id: ObjectId(id) };
             const service = await serviceCollection.findOne(query);
             res.send(service);
+        });
+
+        // post on services
+        app.post("/services", async (req, res) => {
+            const reveiw = req.body;
+            const result = await serviceCollection.insertOne(reveiw);
+            res.send(result);
         });
 
         app.get("/reviews", async (req, res) => {
@@ -120,7 +131,6 @@ async function run() {
 
             res.send(result);
         });
-
     } finally {
     }
 }
